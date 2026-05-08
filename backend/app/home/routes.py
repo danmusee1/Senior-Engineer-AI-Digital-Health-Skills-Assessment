@@ -38,10 +38,11 @@ async def home():
             <p>You are tasked with building a <strong>Retrieval-Augmented Generation (RAG)</strong> application using the provided starter code. Your solution should demonstrate production-quality thinking across the full stack.</p>
 
             <table class="stack-table">
-                <tr><th>Layer</th><th>Provided Starter</th><th>Substitution Policy</th></tr>
-                <tr><td>Frontend</td><td>Next.js (React)</td><td>Any framework you prefer; Chainlit is also acceptable for the chat interface.</td></tr>
-                <tr><td>Backend</td><td>FastAPI (Python)</td><td>Substitute with a framework you are more comfortable with, provided core requirements are met.</td></tr>
-                <tr><td>Database</td><td>PostgreSQL</td><td>Required; do not substitute.</td></tr>
+                <tr><th>Layer</th><th>Provided Starter</th><th>URL</th><th>Substitution Policy</th></tr>
+                <tr><td>Frontend</td><td>Next.js (React)</td><td><a href="http://localhost:3000">localhost:3000</a></td><td>Any framework you prefer.</td></tr>
+                <tr><td>Chat UI</td><td>Chainlit</td><td><a href="http://localhost:8000">localhost:8000</a></td><td>May be used in place of or alongside the Next.js frontend for the chat interface.</td></tr>
+                <tr><td>Backend</td><td>FastAPI (Python)</td><td><a href="http://localhost:5000">localhost:5000</a></td><td>Substitute with a framework you are more comfortable with, provided core requirements are met.</td></tr>
+                <tr><td>Database</td><td>PostgreSQL + pgvector</td><td><code>localhost:5432</code></td><td>Required; do not substitute.</td></tr>
             </table>
 
             <h2>Requirements</h2>
