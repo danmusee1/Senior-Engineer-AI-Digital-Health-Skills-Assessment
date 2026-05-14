@@ -35,7 +35,8 @@ async def home():
             <p class="subtitle">Thank you for taking the time to complete this assessment. Please read the requirements carefully before you begin.</p>
 
             <h2>Project Overview</h2>
-            <p>You are tasked with building a <strong>Retrieval-Augmented Generation (RAG)</strong> application using the provided starter code. Your solution should demonstrate production-quality thinking across the full stack.</p>
+            <p>You are tasked with building a <strong>Retrieval-Augmented Generation (RAG)</strong> application using the provided starter code. 
+            Your solution should demonstrate production-quality thinking across the full stack.</p>
 
             <table class="stack-table">
                 <tr><th>Layer</th><th>Provided Starter</th><th>URL</th><th>Substitution Policy</th></tr>
@@ -55,15 +56,31 @@ async def home():
 
             <h3>2. PDF Upload</h3>
             <ul>
-                <li>A dedicated page allowing users to upload PDF documents for ingestion into the RAG pipeline.</li>
+                <li>A dedicated page on the frontend for allowing users to upload PDF documents for ingestion into the RAG pipeline.</li>
+            </ul>
+            <h3>3. RAG Backend</h3>
+            <ul>
+                <li>Implement a backend service that handles document ingestion, vector storage, and retrieval-augmented generation.</li>
+                <li>Ensure the backend is scalable, secure, and well-documented.</li>
+            </ul>
+            
+            <h3>4. Database</h3>
+            <ul>
+                <li>Use PostgreSQL with pgvector for vector storage.</li>
+                <li>The database has not been pre-configured; you will need to set up the necessary tables and indexes for efficient RAG operations.</li>
+            </ul>
+            <h3>5. Testing</h3>
+            <ul>
+                <li>Implement automated tests for the backend and frontend to ensure functionality and reliability.</li>
+                <li>Instructions for running tests should be included in your README.</li>
             </ul>
 
-            <h3>3. Local Run Instructions</h3>
+            <h3>6. Local Run Instructions</h3>
             <ul>
                 <li>Clear, step-by-step instructions for running the application locally, included in your README.</li>
             </ul>
 
-            <h3>4. Production Deployment Plan</h3>
+            <h3>7. Production Deployment Plan</h3>
             <ul>
                 <li>A brief written outline of how you would deploy this application to production, covering cloud provider choice, CI/CD strategy, and any infrastructure considerations.</li>
             </ul>
@@ -71,20 +88,13 @@ async def home():
             <div class="bonus">
                 <h2>Bonus</h2>
                 <ul>
-                    <li>Add automated tests for the backend and/or frontend.</li>
+                    <li>Include a .env.example file with all necessary environment variables incase you use a .env file.</li>
                     <li>Document architectural decisions and any notable trade-offs.</li>
+                    <li>Include additional service layers (e.g., caching, scheduling) if you believe they would enhance the solution, and document your reasoning.</li>
                 </ul>
             </div>
 
-            <h2>Production Deployment Plan (Example)</h2>
-            <p>Provide a short plan describing how you would deploy this application to production. Your write-up should address, at minimum, the following areas:</p>
-            <ul>
-                <li><strong>Cloud Provider:</strong> Select a cloud platform (e.g., Azure, AWS, or GCP) and justify the choice. Describe how you would host the frontend, backend, and database within that environment.</li>
-                <li><strong>CI/CD:</strong> Outline an automated pipeline for testing and deploying changes (e.g., GitHub Actions, Azure DevOps, or similar).</li>
-                <li><strong>Data &amp; Secrets Management:</strong> Use managed database services and a secrets manager (e.g., AWS Secrets Manager, Azure Key Vault, or GCP Secret Manager) to avoid hard-coded credentials.</li>
-                <li><strong>Observability:</strong> Configure centralised monitoring, structured logging, and alerting so that issues in production are detected promptly.</li>
-            </ul>
-
+            
             <hr style="border: none; border-top: 1px solid #ddd; margin: 36px 0;" />
 
             <h2>Additional Notes</h2>

@@ -9,7 +9,7 @@ This repository contains the starter code for your submission. Please read every
 
 ### How to Run the Project Locally
 
-> **Start here.** The full assessment instructions are served by the application itself — run the project first, then visit the URL below.
+> **Start here.** The full assessment instructions are served by the application itself — run the project first, then visit the frontend URL below.
 
 1. **Build and start all services:**
 
@@ -38,8 +38,8 @@ This repository contains the starter code for your submission. Please read every
 
 ### Submission Guidelines
 
-- Submit your completed project as a **.zip file** or provide a **link to your GitHub repository**.
-- You have **2 days** to complete and submit your solution.
+- Submit your completed project by providing a **link to your GitHub repository**.
+- You have **5 days** to complete and submit your solution.
 - Include clear local run instructions and a production deployment plan in your submission (see the instructions page for details).
 
 ---
