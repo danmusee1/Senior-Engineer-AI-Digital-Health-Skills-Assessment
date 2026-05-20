@@ -23,7 +23,7 @@ This repository contains the starter code for your submission. Please read every
    |---|---|
    | Frontend / **Instructions** | [http://localhost:3000](http://localhost:3000) |
    | Chainlit (Chat UI) | [http://localhost:8000](http://localhost:8000) |
-   | Backend (API) | [http://localhost:5000](http://localhost:5000) |
+   | Backend (API) | [http://localhost:6100](http://localhost:6100) |
    | Database (PostgreSQL) | `localhost:5432` |
 
    Open [http://localhost:3000](http://localhost:3000) in your browser to read the full assessment requirements.
