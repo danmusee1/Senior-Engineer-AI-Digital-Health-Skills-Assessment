@@ -29,7 +29,7 @@ RUN chmod +x ${HOME_DIR}/startup_unix.sh
 FROM python:3.12-slim-bullseye
 
 ARG NAME=LMH
-ARG PORT=5000
+ARG PORT=6100
 ARG HOME_DIR=/usr/src/${NAME}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
