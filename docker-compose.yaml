@@ -17,6 +17,8 @@ services:
         dockerfile: Dockerfile
       command: npm start
       restart: always
+      env_file:
+        - .env
       environment:
         - BACKEND_URL=http://backend:6100
       ports:
