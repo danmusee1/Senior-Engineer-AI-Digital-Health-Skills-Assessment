@@ -1,2 +1,4 @@
 chainlit==2.5.5
 sniffio
+httpx==0.28.1
+python-dotenv==1.2.2
