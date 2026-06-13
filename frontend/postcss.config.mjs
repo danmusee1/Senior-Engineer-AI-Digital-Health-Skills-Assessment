@@ -1,20 +1,7 @@
-import { Config } from "tailwindcss";
-
-const tailwindConfig = {
-  content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
-  theme: {
-    extend: {
-      colors: {
-        primary: "#1d7689",
-        dark: "#193946",
-      },
-    },
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
   },
-  plugins: [],
 };
 
-export default tailwindConfig;
+export default config;
