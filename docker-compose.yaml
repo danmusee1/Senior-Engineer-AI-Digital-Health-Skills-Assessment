@@ -1,11 +1,15 @@
 services:
   backend:
-      build:
-        context: ./backend
-        dockerfile: Dockerfile
-      restart: always
-      ports:
-        - "6100:6100"
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "6100:6100"
+    depends_on:
+      - relational_db
 
   frontend:
       build:
@@ -23,8 +27,12 @@ services:
         context: ./chainlit_app
         dockerfile: Dockerfile
       restart: always
+      env_file:
+        - .env
       ports:
         - "8000:8000"
+      depends_on:
+        - relational_db
   
   relational_db:
     image: pgvector/pgvector:pg16
