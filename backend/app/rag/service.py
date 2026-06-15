@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.db.models import Document, DocumentChunk
 
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://172.20.32.1:11434")
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:latest")
 OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
 CHUNK_SIZE = 500

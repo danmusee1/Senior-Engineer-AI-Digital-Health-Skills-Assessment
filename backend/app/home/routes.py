@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from app.rag.schemas import HealthResponse
 from app.rag.service import check_ollama_connection
+from app.rag import service
 
 router = APIRouter()
 
@@ -21,4 +22,4 @@ def health(db: Session = Depends(get_db)):
         db_ok = True
     except Exception:
         db_ok = False
-    return HealthResponse(status="ok" if db_ok else "degraded", database=db_ok, ollama=check_ollama_connection())
+    return HealthResponse(status="ok" if db_ok else "degraded", database=db_ok, ollama=service.check_ollama_connection())
