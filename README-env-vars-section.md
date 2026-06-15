@@ -54,6 +54,47 @@ OLLAMA_GENERATE_TIMEOUT_SECONDS=120.0
 OLLAMA_MAX_RETRIES=3
 OLLAMA_RETRY_BACKOFF_SECONDS=1.0
 
+# =========================================================================
+# LLM provider switch
+# =========================================================================
+# Controls which backend handles generation and embeddings.
+#
+#   "ollama"            — use the OLLAMA_* settings above (default, fully
+#                         local, no API key needed).
+#   "openai_compatible" — call any OpenAI-compatible /chat/completions
+#                         endpoint: Groq, OpenRouter, Together, a self-
+#                         hosted vLLM/TGI server, etc.
+#
+# Recommended free option: Groq (https://console.groq.com — no credit card).
+# The /health endpoint will report which provider is active and whether it
+# is reachable.
+#
+# To use Ollama only (fully local, no key needed):
+#   LLM_PROVIDER=ollama
+#   EMBEDDING_PROVIDER=ollama
+#   (leave all LLM_API_* and EMBEDDING_API_* blank)
+#
+# To use Groq for generation + Ollama for embeddings:
+#   LLM_PROVIDER=openai_compatible
+#   LLM_API_BASE_URL=https://api.groq.com/openai/v1
+#   LLM_API_KEY=gsk_your_groq_key_here
+#   LLM_API_MODEL=llama-3.1-8b-instant   # or llama-3.3-70b-versatile
+#   EMBEDDING_PROVIDER=ollama             # Groq has no embeddings endpoint
+#
+# Note: EMBEDDING_PROVIDER="openai_compatible" requires a provider that
+# serves an /embeddings endpoint AND whose output dimension matches
+# OLLAMA_EMBEDDING_DIM (768). Mismatching dimensions will break the
+# pgvector similarity search — a DB migration would be required.
+LLM_PROVIDER=ollama
+LLM_API_BASE_URL=
+LLM_API_KEY=
+LLM_API_MODEL=
+
+EMBEDDING_PROVIDER=ollama
+EMBEDDING_API_BASE_URL=
+EMBEDDING_API_KEY=
+EMBEDDING_API_MODEL=
+
 CHUNK_SIZE=500
 CHUNK_OVERLAP=50
 RETRIEVAL_TOP_K=3
@@ -105,6 +146,18 @@ OLLAMA_MODEL=llama3.2:latest
 OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 OLLAMA_EMBEDDING_DIM=768
 
+# Provider switch — same options as the root .env above.
+# Defaults to fully local Ollama; paste a Groq key to use cloud generation.
+LLM_PROVIDER=ollama
+LLM_API_BASE_URL=
+LLM_API_KEY=
+LLM_API_MODEL=
+
+EMBEDDING_PROVIDER=ollama
+EMBEDDING_API_BASE_URL=
+EMBEDDING_API_KEY=
+EMBEDDING_API_MODEL=
+
 API_KEY=
 ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8000
 RATE_LIMIT_ENABLED=true
@@ -139,6 +192,7 @@ its Docker service name, within the Docker network.
 | I want to change... | Edit |
 |---|---|
 | Database credentials, Ollama URL, rate limits, API key, CORS | root `.env` |
+| Switch from Ollama to Groq (or another cloud LLM) | root `.env` — set `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_API_MODEL` |
 | The backend's behavior when run outside Docker | `backend/.env` |
 | A URL the browser calls directly (e.g. `NEXT_PUBLIC_API_URL`) | `frontend/.env`, then rebuild the frontend image |
 | Chainlit's backend URL | `chainlit_app/.env` |
