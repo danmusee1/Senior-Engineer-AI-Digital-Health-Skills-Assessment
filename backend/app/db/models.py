@@ -29,9 +29,13 @@ class Document(Base):
     content_hash = Column(String(64), nullable=False, unique=True, index=True)
     file_size_bytes = Column(Integer, nullable=False, default=0)
     status = Column(
-        Enum(DocumentStatus, name="document_status"),
-        nullable=False,
-        default=DocumentStatus.PENDING,
+    Enum(
+        DocumentStatus,
+        name="document_status",
+        values_callable=lambda enum_cls: [e.value for e in enum_cls],
+    ),
+    nullable=False,
+    default=DocumentStatus.PENDING,
     )
     chunk_count = Column(Integer, nullable=False, default=0)
     error_message = Column(Text, nullable=True)
