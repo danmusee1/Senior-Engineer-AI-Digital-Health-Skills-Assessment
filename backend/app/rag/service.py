@@ -1,3 +1,4 @@
+#rag/service.py
 # Core RAG service — embedding, ingestion, retrieval, generation.
 import os
 import io

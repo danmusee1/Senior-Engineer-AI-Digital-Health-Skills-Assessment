@@ -1,3 +1,4 @@
+#rag/routes.py
 # RAG API endpoints — upload and chat.
 
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException

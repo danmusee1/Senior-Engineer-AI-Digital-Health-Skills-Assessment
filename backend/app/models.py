@@ -1,3 +1,4 @@
+#app/models.py
 """This module contains the base class for SQLAlchemy models."""
 
 from sqlalchemy import MetaData
