@@ -9,44 +9,55 @@ services:
     ports:
       - "6100:6100"
     depends_on:
-      - relational_db
+      relational_db:
+        condition: service_healthy
 
   frontend:
-      build:
-        context: ./frontend
-        dockerfile: Dockerfile
-      command: npm start
-      restart: always
-      env_file:
-        - .env
-      environment:
-        - BACKEND_URL=http://backend:6100
-      ports:
-        - "3000:3000"
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: npm start
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - BACKEND_URL=http://backend:6100
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
 
   chainlit:
-      build:
-        context: ./chainlit_app
-        dockerfile: Dockerfile
-      restart: always
-      environment:
-        - BACKEND_URL=http://backend:6100
-      ports:
-        - "8000:8000"
-      depends_on:
-        - relational_db
-  
+    build:
+      context: ./chainlit_app
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./chainlit_app/.env
+    environment:
+      - BACKEND_URL=http://backend:6100
+    ports:
+      - "8000:8000"
+    depends_on:
+      relational_db:
+        condition: service_healthy
+
   relational_db:
     image: pgvector/pgvector:pg16
     restart: always
+    env_file:
+      - .env
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
     volumes:
       - db_volume:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db_volume:

@@ -5,7 +5,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Senior Full-Stack Engineer, AI & Digital Health",
-  description: "Practice interview for senior full-stack engineer role at Last Mile Health.",
+  description: "Practice  for senior full-stack engineer role at Last Mile Health.",
 };
 
 export default function RootLayout({

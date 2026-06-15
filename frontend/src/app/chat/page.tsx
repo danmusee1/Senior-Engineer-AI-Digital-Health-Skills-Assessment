@@ -2,11 +2,21 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-const API = apiUrl;
+const API = process.env.NEXT_PUBLIC_API_URL;
 
-interface Source { content: string; similarity: number; }
-interface Message { role: "user" | "assistant"; content: string; sources?: Source[]; }
+interface SourceChunk {
+    document_id: number;
+    filename: string;
+    chunk_index: number;
+    content: string;
+    similarity: number;
+}
+
+interface Message {
+    role: "user" | "assistant";
+    content: string;
+    sources?: SourceChunk[];
+}
 
 export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -28,13 +38,22 @@ export default function ChatPage() {
             const res = await fetch(`${API}/rag/query`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ query }),
+                body: JSON.stringify({ query, top_k: 3 }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || "Query failed.");
-            setMessages((prev) => [...prev, { role: "assistant", content: data.answer, sources: data.sources }]);
+            if (!res.ok) {
+                const detail = typeof data.detail === "string" ? data.detail : "Query failed.";
+                throw new Error(detail);
+            }
+            setMessages((prev) => [
+                ...prev,
+                { role: "assistant", content: data.answer, sources: data.sources },
+            ]);
         } catch (e: any) {
-            setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${e.message}` }]);
+            setMessages((prev) => [
+                ...prev,
+                { role: "assistant", content: `Error: ${e.message || "Something went wrong."}` },
+            ]);
         } finally {
             setLoading(false);
         }
@@ -79,7 +98,7 @@ export default function ChatPage() {
                                             <p className="font-semibold text-gray-500">Sources:</p>
                                             {msg.sources.slice(0, 3).map((s, j) => (
                                                 <p key={j}>
-                                                    [{j + 1}] {(s.similarity * 100).toFixed(0)}% — {s.content.slice(0, 100)}...
+                                                    [{j + 1}] {s.filename} (chunk {s.chunk_index}) — {(s.similarity * 100).toFixed(0)}% — {s.content.slice(0, 100)}...
                                                 </p>
                                             ))}
                                         </div>
