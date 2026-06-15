@@ -43,6 +43,31 @@ class Settings(BaseSettings):
     ollama_max_retries: int = 3
     ollama_retry_backoff_seconds: float = 1.0
 
+    # --- LLM provider switch ----------------------------------------------
+    # "ollama" (default) = use the local Ollama instance above for both
+    # generation and embeddings, unchanged.
+    # "openai_compatible" = call an OpenAI-compatible /chat/completions (and,
+    # for embeddings, /embeddings) endpoint instead — e.g. Groq, OpenRouter,
+    # Together, a self-hosted vLLM/TGI server, etc.
+    llm_provider: str = "ollama"
+    embedding_provider: str = "ollama"
+
+    # Used when llm_provider == "openai_compatible". Retry/backoff/timeout
+    # settings above (ollama_max_retries, ollama_retry_backoff_seconds,
+    # ollama_generate_timeout_seconds) are reused for these calls too.
+    llm_api_base_url: str = "https://api.groq.com/openai/v1"
+    llm_api_key: str = ""
+    llm_api_model: str = "llama-3.1-8b-instant"
+
+    # Used when embedding_provider == "openai_compatible". Most fast/free
+    # chat-only providers (e.g. Groq) do not serve an embeddings endpoint —
+    # leave embedding_provider as "ollama" unless you have one that does, and
+    # make sure its output dimension matches ollama_embedding_dim above
+    # (the pgvector column is sized to that value).
+    embedding_api_base_url: str = ""
+    embedding_api_key: str = ""
+    embedding_api_model: str = ""
+
     # --- RAG pipeline -------------------------------------------------
     chunk_size: int = 500
     chunk_overlap: int = 50
