@@ -29,8 +29,8 @@ services:
         context: ./chainlit_app
         dockerfile: Dockerfile
       restart: always
-      env_file:
-        - .env
+      environment:
+        - BACKEND_URL=http://backend:6100
       ports:
         - "8000:8000"
       depends_on:
