@@ -1,3 +1,23 @@
+## Documentation
+
+This repository contains several documents aimed at different audiences:
+
+| Document | Purpose |
+|----------|---------|
+| README.md | Quick start guide for running the application locally |
+| ARCHITECTURE.md | System architecture, design decisions, and trade-offs |
+| ENVIRONMENT.md | Complete reference for all environment variables and configuration files |
+| SETUP_AND_DEPLOYMENT.md | Production deployment and operational guidance |
+| DOCUMENTATION_LAYOUT.md | Documentation structure, reading order, and maintenance guidelines |
+
+**Recommended reading order for new users:**
+
+1. README.md
+2. ENVIRONMENT.md (if configuration changes are needed)
+3. ARCHITECTURE.md
+4. SETUP_AND_DEPLOYMENT.md
+
+For details on how the documentation is organized and why content is split across files, see `DOCUMENTATION_LAYOUT.md`.
 ## Getting Started
 
 ### Prerequisites
@@ -105,7 +125,14 @@ docker compose -p assessment down -v
 | `service "backend" is not running` when running `docker compose exec` | Missing `-p assessment` project flag | Re-run with `docker compose -p assessment exec backend ...` |
 | Document stuck on `processing` | Background ingestion failed | Check `error_message` via `GET /rag/documents/{id}` and `docker compose -p assessment logs backend` |
 
-See `ARCHITECTURE.md` for design decisions and trade-offs, and
-`SETUP_AND_DEPLOYMENT.md` for the production deployment plan.
+### Further Reading
+
+- `ARCHITECTURE.md` — design decisions and trade-offs
+- `ENVIRONMENT.md` — complete environment variable reference
+- `SETUP_AND_DEPLOYMENT.md` — production deployment plan
+- `DOCUMENTATION_LAYOUT.md` — documentation structure and recommended reading order
+
+If you're new to the project, start with this README and then follow the
+recommended reading order in `DOCUMENTATION_LAYOUT.md`.
 
 ---
