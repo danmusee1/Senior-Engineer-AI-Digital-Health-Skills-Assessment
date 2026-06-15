@@ -189,10 +189,10 @@ its Docker service name, within the Docker network.
 
 **Quick reference — which `.env` to edit:**
 
-| I want to change... | Edit |
-|---|---|
-| Database credentials, Ollama URL, rate limits, API key, CORS | root `.env` |
-| Switch from Ollama to Groq (or another cloud LLM) | root `.env` — set `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_API_MODEL` |
-| The backend's behavior when run outside Docker | `backend/.env` |
-| A URL the browser calls directly (e.g. `NEXT_PUBLIC_API_URL`) | `frontend/.env`, then rebuild the frontend image |
-| Chainlit's backend URL | `chainlit_app/.env` |
+| I want to change...                                           | Edit                                                             |
+| ------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Database credentials, Ollama URL, rate limits, API key, CORS  | root `.env`                                                      |
+| Switch from Ollama to Groq (or another cloud LLM)             | root `.env` — set `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_API_MODEL` |
+| The backend's behavior when run outside Docker                | `backend/.env`                                                   |
+| A URL the browser calls directly (e.g. `NEXT_PUBLIC_API_URL`) | `frontend/.env`, then rebuild the frontend image                 |
+| Chainlit's backend URL                                        | `chainlit_app/.env`                                              |
