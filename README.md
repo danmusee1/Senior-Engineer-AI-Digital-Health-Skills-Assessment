@@ -185,3 +185,77 @@ If you're new to the project, start with this README and then follow the
 recommended reading order in `DOCUMENTATION_LAYOUT.md`.
 
 ---
+## Testing
+
+### Backend
+
+The backend test suite covers all RAG API endpoints using FastAPI's test
+client against an in-memory SQLite database (no Postgres or Ollama needed).
+
+**Run the tests:**
+```sh
+docker compose -p assessment exec backend pytest tests/test_routes.py -v
+```
+
+**What is tested:**
+
+| Area | Tests |
+|---|---|
+| `POST /rag/upload` | Rejects non-PDF content types, oversized files, and invalid PDF magic bytes; queues background ingestion for new uploads; skips re-ingestion for duplicates; surfaces `ValueError` from the service layer as 422 |
+| `POST /rag/query` | Returns answer and sources; passes `top_k` correctly; rejects empty and missing query fields; returns 500 on service exceptions; handles no indexed documents gracefully |
+| `GET /rag/documents` | Returns empty list; lists all documents; paginates with `limit`/`offset`; rejects invalid pagination params; orders newest first |
+| `GET /rag/documents/{id}` | Returns document by ID; returns 404 for unknown IDs; serialises `status` correctly |
+| `DELETE /rag/documents/{id}` | Returns 204 on success; returns 404 for unknown IDs; actually removes the row from the database |
+
+**How it works:**
+
+The tests use an in-memory SQLite database with
+[`StaticPool`](https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#connect-strings)
+so all connections share the same database instance. The `reset_db` fixture
+drops and recreates the `documents` and `document_chunks` tables before each
+test. External dependencies (Ollama, the embedding service, the LLM) are
+patched out with `unittest.mock.patch` so the suite runs offline with no
+GPU or API keys required.
+
+---
+
+### Frontend
+
+The frontend test suite covers the Upload and Chat pages using
+[React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
+
+**Install test dependencies (first time only):**
+```sh
+cd frontend
+npm install --save-dev @testing-library/react @testing-library/jest-dom \
+  @testing-library/user-event jest jest-environment-jsdom ts-jest
+```
+
+**Run the tests:**
+```sh
+cd frontend
+npx jest frontend_tests.test.tsx
+```
+
+**What is tested:**
+
+| Area | Tests |
+|---|---|
+| Upload page — rendering | Heading, drop zone, nav links, empty state, document list with status badges, chunk counts, error messages for failed documents |
+| Upload page — file upload | Success flow, duplicate detection message, non-PDF rejection, oversized file rejection, loading state, API error display, network failure display |
+| Upload page — drag and drop | Drop zone highlights on drag over, removes highlight on drag leave, triggers upload on file drop |
+| Upload page — polling | Automatically polls every 3 seconds while any document is `pending` or `processing`, stops when all are `completed` |
+| Chat page — rendering | Heading, input field, send button, empty state prompt, nav links |
+| Chat page — sending messages | User message appears in chat, assistant answer appears, input clears after send, Enter key submits, empty/whitespace messages are blocked, thinking indicator shows while loading, input and button disabled during request |
+| Chat page — sources | Source references display with filename, chunk index, and similarity percentage; sources section is hidden when the array is empty |
+| Chat page — error handling | API errors shown as assistant messages, network failures shown, input re-enables after an error |
+| Chat page — multi-turn | Messages accumulate across turns; a second message cannot be sent while the first is still loading |
+
+**How it works:**
+
+`fetch` is replaced with a `jest.fn()` mock for each test so no real network
+calls are made. Next.js `Link` is replaced with a plain `<a>` tag stub.
+Environment variables (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_API_KEY`) are set
+directly in the test file. `jest.useFakeTimers()` is used for polling tests
+so the 3-second interval can be advanced without real waiting.
+---
