@@ -1,261 +1,279 @@
+# Last Mile Health — RAG Document Q&A System
+
+A Retrieval-Augmented Generation (RAG) system for document Q&A. Upload PDF
+documents, ask questions, and receive answers grounded in the document
+content with source citations. Built with FastAPI, Next.js, Chainlit, and
+Postgres + pgvector.
+
+---
+
 ## Documentation
 
-This repository contains several documents aimed at different audiences:
+| Document | Purpose |
+|---|---|
+| `README.md` | Quick start guide for running the application locally |
+| `ARCHITECTURE.md` | System architecture, design decisions, and trade-offs |
+| `ENVIRONMENT.md` | Complete reference for all environment variables |
+| `SETUP_AND_DEPLOYMENT.md` | Production deployment and operational guidance |
 
-| Document                | Purpose                                                                  |
-| ----------------------- | ------------------------------------------------------------------------ |
-| README.md               | Quick start guide for running the application locally                    |
-| ARCHITECTURE.md         | System architecture, design decisions, and trade-offs                    |
-| ENVIRONMENT.md          | Complete reference for all environment variables and configuration files |
-| SETUP_AND_DEPLOYMENT.md | Production deployment and operational guidance                           |
-| DOCUMENTATION_LAYOUT.md | Documentation structure, reading order, and maintenance guidelines       |
+**Recommended reading order:**
+1. `README.md` — you are here
+2. `ENVIRONMENT.md` — if you need to change configuration
+3. `ARCHITECTURE.md` — to understand design decisions
+4. `SETUP_AND_DEPLOYMENT.md` — before any non-local deployment
 
-**Recommended reading order for new users:**
+---
 
-1. README.md
-2. ENVIRONMENT.md (if configuration changes are needed)
-3. ARCHITECTURE.md
-4. SETUP_AND_DEPLOYMENT.md
+## Architecture at a Glance
 
-For details on how the documentation is organized and why content is split across files, see `DOCUMENTATION_LAYOUT.md`.
+```
+Browser
+  │
+  ├── Frontend (Next.js)  :3000  ──┐
+  └── Chainlit (Chat UI)  :8000  ──┤
+                                    │
+                                    ▼
+                          Backend API (FastAPI) :6100
+                                    │
+                  ┌─────────────────┼─────────────────┐
+                  ▼                                   ▼
+     Postgres + pgvector :5432            LLM provider (your choice)
+     (documents, chunks,                  │
+      embeddings)                         ├── Option A: Groq (cloud, free)
+                                          └── Option B: Ollama (local, no key)
+```
 
-## Getting Started
+For design decisions and trade-offs, see `ARCHITECTURE.md`.
 
-### Prerequisites
+---
 
-- Docker and Docker Compose
-- A language model backend — choose **one** of the options below:
+## Prerequisites
 
-  **Option A — Groq (recommended for a quick demo, no GPU needed)**
-  1. Sign up at [console.groq.com](https://console.groq.com) — free, no credit card required.
-  2. Create an API key.
-  3. In your `.env` set:
+Before running anything, you need:
+
+- **Docker and Docker Compose** — [install Docker](https://docs.docker.com/get-docker/)
+- **An LLM provider** — choose one of the two options below
+
+> **Embeddings always run via Ollama** regardless of which LLM provider you
+> choose (Groq has no embeddings endpoint). So Ollama is required in both
+> cases — the difference is only where text *generation* happens.
+
+---
+
+## Step 1 — Choose your LLM provider and install prerequisites
+
+### Option A — Groq (recommended for a quick demo, no GPU needed)
+
+Groq is free, requires no credit card, and is significantly faster than
+running a local model.
+
+1. Sign up at [console.groq.com](https://console.groq.com) and create an
+   API key.
+2. Install [Ollama](https://ollama.com) on the **host machine** (for
+   embeddings only) and pull the embedding model:
+
+   ```sh
+   ollama pull nomic-embed-text
+   ```
+
+3. Start Ollama bound to all interfaces so containers can reach it:
+
+   ```sh
+   OLLAMA_HOST=0.0.0.0 ollama serve
+   ```
+
+   > If running Ollama as a systemd service, set `OLLAMA_HOST=0.0.0.0` in
+   > its environment file and restart it.
+
+### Option B — Ollama only (fully local, no API key needed)
+
+All generation and embeddings run on your machine. Requires a GPU or
+patience — `llama3.2` is several GB and generation will be slow on CPU.
+
+1. Install [Ollama](https://ollama.com) on the **host machine** and pull
+   both models:
+
+   ```sh
+   ollama pull llama3.2:latest
+   ollama pull nomic-embed-text
+   ```
+
+2. Start Ollama bound to all interfaces:
+
+   ```sh
+   OLLAMA_HOST=0.0.0.0 ollama serve
+   ```
+
+---
+
+## Step 2 — Configure environment variables
+
+```sh
+cp .env.example .env
+```
+
+Then open `.env` and make the following changes depending on your chosen
+provider:
+
+### If using Groq (Option A)
 
 ```dotenv
-     LLM_PROVIDER=openai_compatible
-     LLM_API_BASE_URL=https://api.groq.com/openai/v1
-     LLM_API_KEY=gsk_your_key_here
-     LLM_API_MODEL=llama-3.1-8b-instant
-     EMBEDDING_PROVIDER=ollama   # Groq has no embeddings endpoint
+# LLM — use Groq
+LLM_PROVIDER=openai_compatible
+LLM_API_BASE_URL=https://api.groq.com/openai/v1
+LLM_API_KEY=gsk_your_key_here        # ← paste your Groq API key
+LLM_API_MODEL=llama-3.1-8b-instant
+
+# Embeddings — stay on Ollama (Groq has no embeddings endpoint)
+EMBEDDING_PROVIDER=ollama
+OLLAMA_BASE_URL=http://host.docker.internal:11434   # ← see table below
 ```
 
-4. Still install Ollama (see Option B) and pull **only** the embedding model:
-
-```sh
-     ollama pull nomic-embed-text
-     OLLAMA_HOST=0.0.0.0 ollama serve
-```
-
-**Option B — Ollama (fully local, no API key)**
-
-Install [Ollama](https://ollama.com) on the **host machine** (not in a
-container) and pull the required models:
-
-```sh
-  ollama pull llama3.2:latest
-  ollama pull nomic-embed-text
-```
-
-Ollama must listen on all interfaces so containers can reach it:
-
-```sh
-  OLLAMA_HOST=0.0.0.0 ollama serve
-```
-
-(If running Ollama as a systemd service, set `OLLAMA_HOST=0.0.0.0` in its
-environment and restart the service.)
-
-In your `.env` make sure the provider switch is set to its default:
+### If using Ollama only (Option B)
 
 ```dotenv
-  LLM_PROVIDER=ollama
-  EMBEDDING_PROVIDER=ollama
+LLM_PROVIDER=ollama
+EMBEDDING_PROVIDER=ollama
+OLLAMA_BASE_URL=http://host.docker.internal:11434   # ← see table below
+OLLAMA_MODEL=llama3.2:latest
 ```
 
-### Setup
+### `OLLAMA_BASE_URL` — platform-specific values
 
-1. **Copy and configure environment variables:**
+`localhost` inside a container refers to the container itself, not your
+host machine. Use one of these instead:
+
+| Platform | `OLLAMA_BASE_URL` |
+|---|---|
+| Docker Desktop (Windows / Mac) | `http://host.docker.internal:11434` |
+| Linux | `http://host.docker.internal:11434` — requires `extra_hosts` mapping already set in `docker-compose.yaml` |
+| Linux fallback | Find your bridge IP: `docker network inspect bridge \| grep Gateway` then use `http://<that-ip>:11434` |
+
+> **Security note**: Never commit real API keys to version control. Add
+> `.env` to `.gitignore` (it already is) and keep secrets out of
+> screenshots, chat logs, and documentation.
+
+---
+
+## Step 3 — Build and start all services
 
 ```sh
-   cp .env.example .env
+docker compose -p assessment up -d --build
 ```
 
-**If using Groq (Option A):** paste your API key into `LLM_API_KEY` and
-confirm `LLM_PROVIDER=openai_compatible`. Also confirm `OLLAMA_BASE_URL`
-below — it is still used for embeddings.
+This starts four containers:
 
-**If using Ollama only (Option B):** confirm `OLLAMA_BASE_URL` matches
-your platform and that `LLM_PROVIDER=ollama`:
+| Container | Purpose | Port |
+|---|---|---|
+| `backend` | FastAPI RAG API | `6100` |
+| `frontend` | Next.js upload + chat UI | `3000` |
+| `chainlit` | Chainlit chat interface | `8000` |
+| `relational_db` | Postgres 16 + pgvector | `5432` |
 
-| Platform                     | `OLLAMA_BASE_URL`                                                                                             |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Docker Desktop (Windows/Mac) | `http://host.docker.internal:11434`                                                                           |
-| Linux                        | `http://host.docker.internal:11434` (requires the `extra_hosts` mapping already set in `docker-compose.yaml`) |
-| Linux fallback               | `http://172.17.0.1:11434` — confirm with `docker network inspect bridge \| grep Gateway`                      |
+---
 
-2. **Build and start all services:**
+## Step 4 — Verify everything is healthy
 
 ```sh
-   docker compose -p assessment up -d --build
+curl http://localhost:6100/health
 ```
 
-3. **Access the application:**
-
-   | Service                     | URL                                                          |
-   | --------------------------- | ------------------------------------------------------------ |
-   | Frontend / **Instructions** | [http://localhost:3000](http://localhost:3000)               |
-   | Chainlit (Chat UI)          | [http://localhost:8000](http://localhost:8000)               |
-   | Backend (API)               | [http://localhost:6100](http://localhost:6100)               |
-   | Backend health check        | [http://localhost:6100/health](http://localhost:6100/health) |
-   | Database (PostgreSQL)       | `localhost:5432`                                             |
-
-   Open [http://localhost:3000](http://localhost:3000) in your browser to read the full assessment requirements.
-
-4. **Verify everything is healthy:**
-
-```sh
-   curl http://localhost:6100/health
-```
-
-Expected response (Groq):
-
+**Expected response (Groq):**
 ```json
-{
-  "status": "ok",
-  "database": true,
-  "llm": true,
-  "llm_provider": "openai_compatible"
-}
+{"status": "ok", "database": true, "llm": true, "llm_provider": "openai_compatible"}
 ```
 
-Expected response (Ollama):
-
+**Expected response (Ollama):**
 ```json
-{ "status": "ok", "database": true, "llm": true, "llm_provider": "ollama" }
+{"status": "ok", "database": true, "llm": true, "llm_provider": "ollama"}
 ```
 
-If `"llm": false` with Groq, check that `LLM_API_KEY` is set correctly in `.env`.
-
-If `"llm": false` with Ollama, double-check `OLLAMA_BASE_URL` and that
-Ollama is bound to `0.0.0.0`, then:
+If `"llm": false` with **Groq** — check that `LLM_API_KEY` is set and
+valid in `.env`, then:
 
 ```sh
-   docker compose -p assessment up -d --force-recreate backend
+docker compose -p assessment up -d --force-recreate backend
 ```
 
-5. **Using the app:**
-   - Go to the **Upload** page and upload a PDF (max 20MB). Ingestion runs
-     in the background — the document list shows status (`pending` →
-     `processing` → `completed`/`failed`) and updates automatically.
-   - Go to the **Chat** page (or Chainlit) and ask questions once a document
-     shows `completed`. Answers include source chunks with similarity scores.
+If `"llm": false` with **Ollama** — check that `OLLAMA_BASE_URL` matches
+your platform (see table above) and Ollama is running with
+`OLLAMA_HOST=0.0.0.0`, then force-recreate the backend as above.
 
-### Stopping services
+---
+
+## Step 5 — Use the app
+
+| Service | URL |
+|---|---|
+| Frontend (Upload + Chat) | [http://localhost:3000](http://localhost:3000) |
+| Chainlit (Chat UI) | [http://localhost:8000](http://localhost:8000) |
+| Backend API | [http://localhost:6100](http://localhost:6100) |
+| API health check | [http://localhost:6100/health](http://localhost:6100/health) |
+| API docs (Swagger) | [http://localhost:6100/docs](http://localhost:6100/docs) |
+
+1. Go to [http://localhost:3000/upload](http://localhost:3000/upload)
+2. Upload a PDF (max 20 MB). Ingestion runs in the background — watch the
+   status badge change from `pending` → `processing` → `completed`.
+3. Once `completed`, go to [http://localhost:3000/chat](http://localhost:3000/chat)
+   and ask a question. Answers include source chunks with similarity scores.
+
+---
+
+## Stopping services
 
 ```sh
 docker compose -p assessment down
 ```
 
-To also wipe the database (useful if you hit a stale-schema error during
-development):
+To also wipe the database (use this if you hit a stale-schema error during
+development — **this deletes all uploaded documents**):
 
 ```sh
 docker compose -p assessment down -v
 ```
 
-### Troubleshooting
-
-| Symptom                                                               | Cause                                                                                       | Fix                                                                                                       |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `"llm": false` in `/health` with Groq                                 | Missing or invalid `LLM_API_KEY`                                                            | Paste a valid key from [console.groq.com](https://console.groq.com) into `.env` and recreate the backend  |
-| `Cannot assign requested address` calling Ollama                      | Backend container can't reach `localhost:11434` (that's the container itself, not the host) | Set `OLLAMA_BASE_URL=http://host.docker.internal:11434` and ensure Ollama runs with `OLLAMA_HOST=0.0.0.0` |
-| `"llm": false` in `/health` with Ollama                               | Ollama not reachable from inside the container                                              | Check `OLLAMA_BASE_URL` and that `OLLAMA_HOST=0.0.0.0` is set, then recreate the backend                  |
-| `invalid input value for enum document_status`                        | Stale Postgres schema from a previous version                                               | `docker compose -p assessment down -v` then `up -d --build` (dev only — destroys data)                    |
-| `service "backend" is not running` when running `docker compose exec` | Missing `-p assessment` project flag                                                        | Re-run with `docker compose -p assessment exec backend ...`                                               |
-| Document stuck on `processing`                                        | Background ingestion failed                                                                 | Check `error_message` via `GET /rag/documents/{id}` and `docker compose -p assessment logs backend`       |
-
-### Further Reading
-
-- `ARCHITECTURE.md` — design decisions and trade-offs
-- `ENVIRONMENT.md` — complete environment variable reference
-- `SETUP_AND_DEPLOYMENT.md` — production deployment plan
-- `DOCUMENTATION_LAYOUT.md` — documentation structure and recommended reading order
-
-If you're new to the project, start with this README and then follow the
-recommended reading order in `DOCUMENTATION_LAYOUT.md`.
-
 ---
-## Testing
+
+## Running tests
 
 ### Backend
 
-The backend test suite covers all RAG API endpoints using FastAPI's test
-client against an in-memory SQLite database (no Postgres or Ollama needed).
+No Postgres or LLM provider needed — all external calls are mocked.
 
-**Run the tests:**
 ```sh
-docker compose -p assessment exec backend pytest tests/test_routes.py -v
+docker compose -p assessment exec backend pytest tests/test_routes.py -v  
+docker compose -p assessment up -d relational_db
+cd backend
+pip install -r requirements.txt
+pytest -v
 ```
-
-**What is tested:**
-
-| Area | Tests |
-|---|---|
-| `POST /rag/upload` | Rejects non-PDF content types, oversized files, and invalid PDF magic bytes; queues background ingestion for new uploads; skips re-ingestion for duplicates; surfaces `ValueError` from the service layer as 422 |
-| `POST /rag/query` | Returns answer and sources; passes `top_k` correctly; rejects empty and missing query fields; returns 500 on service exceptions; handles no indexed documents gracefully |
-| `GET /rag/documents` | Returns empty list; lists all documents; paginates with `limit`/`offset`; rejects invalid pagination params; orders newest first |
-| `GET /rag/documents/{id}` | Returns document by ID; returns 404 for unknown IDs; serialises `status` correctly |
-| `DELETE /rag/documents/{id}` | Returns 204 on success; returns 404 for unknown IDs; actually removes the row from the database |
-
-**How it works:**
-
-The tests use an in-memory SQLite database with
-[`StaticPool`](https://docs.sqlalchemy.org/en/20/dialects/sqlite.html#connect-strings)
-so all connections share the same database instance. The `reset_db` fixture
-drops and recreates the `documents` and `document_chunks` tables before each
-test. External dependencies (Ollama, the embedding service, the LLM) are
-patched out with `unittest.mock.patch` so the suite runs offline with no
-GPU or API keys required.
-
----
 
 ### Frontend
 
-The frontend test suite covers the Upload and Chat pages using
-[React Testing Library](https://testing-library.com/docs/react-testing-library/intro/).
-
-**Install test dependencies (first time only):**
 ```sh
 cd frontend
-npm install --save-dev @testing-library/react @testing-library/jest-dom \
-  @testing-library/user-event jest jest-environment-jsdom ts-jest
+npm install
+npx jest
 ```
 
-**Run the tests:**
-```sh
-cd frontend
-npx jest frontend_tests.test.tsx
-```
-
-**What is tested:**
-
-| Area | Tests |
-|---|---|
-| Upload page — rendering | Heading, drop zone, nav links, empty state, document list with status badges, chunk counts, error messages for failed documents |
-| Upload page — file upload | Success flow, duplicate detection message, non-PDF rejection, oversized file rejection, loading state, API error display, network failure display |
-| Upload page — drag and drop | Drop zone highlights on drag over, removes highlight on drag leave, triggers upload on file drop |
-| Upload page — polling | Automatically polls every 3 seconds while any document is `pending` or `processing`, stops when all are `completed` |
-| Chat page — rendering | Heading, input field, send button, empty state prompt, nav links |
-| Chat page — sending messages | User message appears in chat, assistant answer appears, input clears after send, Enter key submits, empty/whitespace messages are blocked, thinking indicator shows while loading, input and button disabled during request |
-| Chat page — sources | Source references display with filename, chunk index, and similarity percentage; sources section is hidden when the array is empty |
-| Chat page — error handling | API errors shown as assistant messages, network failures shown, input re-enables after an error |
-| Chat page — multi-turn | Messages accumulate across turns; a second message cannot be sent while the first is still loading |
-
-**How it works:**
-
-`fetch` is replaced with a `jest.fn()` mock for each test so no real network
-calls are made. Next.js `Link` is replaced with a plain `<a>` tag stub.
-Environment variables (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_API_KEY`) are set
-directly in the test file. `jest.useFakeTimers()` is used for polling tests
-so the 3-second interval can be advanced without real waiting.
 ---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `"llm": false` in `/health` (Groq) | Missing or invalid `LLM_API_KEY` | Paste a valid key from [console.groq.com](https://console.groq.com) into `.env`; recreate backend |
+| `"llm": false` in `/health` (Ollama) | Ollama unreachable from container | Check `OLLAMA_BASE_URL` matches your platform; ensure `OLLAMA_HOST=0.0.0.0`; recreate backend |
+| `Cannot assign requested address` | `OLLAMA_BASE_URL=http://localhost:11434` used inside container | Change to `http://host.docker.internal:11434` in `.env` |
+| `invalid input value for enum document_status` | Stale Postgres schema from a previous version | `docker compose -p assessment down -v` then `up -d --build` (dev only — destroys data) |
+| `service "backend" is not running` on `exec` | Missing `-p assessment` project flag | Re-run with `docker compose -p assessment exec backend ...` |
+| Document stuck on `processing` | Background ingestion failed | Check `GET /rag/documents/{id}` for `error_message`; check `docker compose -p assessment logs backend` |
+| Upload returns duplicate but document is `failed` | Previous attempt failed after the record was created | Delete via `DELETE /rag/documents/{id}` (or wipe the DB), then re-upload |
+
+---
+
+## Further reading
+
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — design decisions and trade-offs
+- [`ENVIRONMENT.md`](./ENVIRONMENT.md) — full annotated `.env` reference
+- [`SETUP_AND_DEPLOYMENT.md`](./SETUP_AND_DEPLOYMENT.md) — production deployment plan
