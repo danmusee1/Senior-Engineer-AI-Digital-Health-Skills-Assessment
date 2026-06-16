@@ -67,7 +67,7 @@ const mockFetch = (responses: Array<{ ok: boolean; json: object; status?: number
 // Lazy import so env vars are set first
 let UploadPage: React.ComponentType;
 beforeAll(async () => {
-  const mod = await import("./upload/page");
+  const mod = await import("./src/app/upload/page");
   UploadPage = mod.default;
 });
 
@@ -292,16 +292,18 @@ describe("UploadPage", () => {
     it("highlights drop zone on drag over", async () => {
       global.fetch = mockFetch([{ ok: true, json: { items: [], total: 0, limit: 20, offset: 0 } }]);
       render(<UploadPage />);
-      const dropZone = screen.getByText(/click or drag a pdf here/i).closest("div")!;
+     const dropZone = screen.getByText(/click or drag a pdf here/i)
+  .closest("[class*='border-dashed']")!;
 
       fireEvent.dragOver(dropZone, { preventDefault: () => {} });
-      expect(dropZone).toHaveClass(/border-\[#1d7689\]/);
+      expect(dropZone.className).toContain("border-[#1d7689]");
     });
 
     it("removes highlight on drag leave", async () => {
       global.fetch = mockFetch([{ ok: true, json: { items: [], total: 0, limit: 20, offset: 0 } }]);
       render(<UploadPage />);
-      const dropZone = screen.getByText(/click or drag a pdf here/i).closest("div")!;
+      const dropZone = screen.getByText(/click or drag a pdf here/i)
+  .closest("[class*='border-dashed']")!;
 
       fireEvent.dragOver(dropZone, { preventDefault: () => {} });
       fireEvent.dragLeave(dropZone);
@@ -317,7 +319,8 @@ describe("UploadPage", () => {
       ]);
 
       render(<UploadPage />);
-      const dropZone = screen.getByText(/click or drag a pdf here/i).closest("div")!;
+      const dropZone = screen.getByText(/click or drag a pdf here/i)
+  .closest("[class*='border-dashed']")!;
       const file = new File(["content"], "dropped.pdf", { type: "application/pdf" });
 
       await act(async () => {
@@ -359,7 +362,7 @@ describe("UploadPage", () => {
 
 let ChatPage: React.ComponentType;
 beforeAll(async () => {
-  const mod = await import("./chat/page");
+  const mod = await import("./src/app/chat/page");
   ChatPage = mod.default;
 });
 
