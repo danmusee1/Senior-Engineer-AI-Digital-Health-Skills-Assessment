@@ -29,6 +29,14 @@ class DocumentResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_validator("status", mode="before")   # ← ADD THIS
+    @classmethod
+    def coerce_status(cls, v):
+        """Coerce plain strings from SQLite into the DocumentStatus enum."""
+        if isinstance(v, DocumentStatus):
+            return v
+        return DocumentStatus(v)
+
 
 class UploadResponse(BaseModel):
     """Response returned immediately after an upload is accepted.
